@@ -9,10 +9,10 @@ export default async function Home() {
   const hello = await api.post.hello({ text: "from tRPC" });
   const session = await auth();
 
-  if (session?.user) {
-    redirect("/dashboard");
-  } else {
+  if (!session?.user) {
     redirect("/api/auth/signin");
+  } else {
+    redirect("/workspace")
   }
 
   // return (
