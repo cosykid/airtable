@@ -175,7 +175,7 @@ export default function WorkspaceUI() {
               </button>
             </div>
             {/* Right hand side*/}
-            <div className="bg-amber-300">
+            <div className="">
               {/* Create & Share & ... */}
               <div className="flex items-center">
                 <button className="bg-[rgb(22,110,225)] text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-blue-700">
