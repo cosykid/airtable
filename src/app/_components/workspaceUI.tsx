@@ -1,27 +1,44 @@
 "use client";
 
 import { useState } from "react";
-import { Search, ChevronDown, Star, StarOff, Plus, Grid, Menu, MoreHorizontal, Bell, Home, Users, Book, ShoppingCart, Upload } from "lucide-react";
-
+import { Search, ChevronDown, Star, StarOff, Plus, Grid, Menu, MoreHorizontal, Home, Users, Book, ShoppingCart, Upload } from "lucide-react";
+import { api } from "~/trpc/react";
 import Image from "next/image";
+import WorkspaceBase from "~/app/_components/workspaceBase";
 
-export default function WorkspaceUI() {
+export default function WorkspaceUI({
+  baseList,
+}: {
+  baseList: [string, string][];
+}) {
   const [starred, setStarred] = useState(true);
   const [viewMode, setViewMode] = useState("grid");
   const [isHomeOpen, setIsHomeOpen] = useState(true);
   const [isWorkspacesOpen, setIsWorkspacesOpen] = useState(true);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [showDropdown, setShowDropdown] = useState(false);
+
+  const utils = api.useUtils();
+  const { data: bases } = api.base.getAll.useQuery();
+
+  const createBase = api.base.create.useMutation({
+    onSuccess: (newBase) => {
+      utils.base.getAll.setData(undefined, (prev) =>
+        prev ? [newBase, ...prev] : [newBase]
+      );
+    },
+  });
 
   return (
     <div className="h-screen text-gray-800 flex flex-col">
       {/* Top Navbar (Full Width) */}
-      <div className="flex items-center p-3 border-b border-gray-200 bg-white w-full">
+      <div className="flex items-center p-1.5 border-b border-gray-200 bg-white w-full">
         <div className="flex items-center mr-4">
           <button
             className="p-2 mr-2"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           >
-            <Menu size={16} className="text-gray-600" />
+            <Menu size={16} className="hover:cursor-pointer text-gray-600" />
           </button>
           <Image
             src="/logo.png"
@@ -52,14 +69,43 @@ export default function WorkspaceUI() {
         {/* notifs & Help & profile */}
         <div className="flex items-center ml-auto">
           <button className="p-2">
-            <span className="text-xs text-gray-600">? Help</span>
+            <span className="text-xs text-gray-600 flex">
+              <svg className="w-4 h-4 text-gray-600 mr-1" fill="currentColor">
+                <use href="/icon_definitions.svg#Question" />
+              </svg>
+              <p className="text-[14px] mr-2">Help</p>
+            </span>
           </button>
           <button className="p-2">
-            <Bell size={16} className="text-gray-600" />
+          <span className="w-7 h-7 rounded-full border border-gray-300 flex items-center justify-center">
+            <svg className="w-4 h-4 text-gray-600" fill="currentColor">
+              <use href="/icon_definitions.svg#Bell"/>
+            </svg>
+          </span>
           </button>
-          <div className="bg-yellow-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs ml-2">
-            L
+          <div className="relative">
+            <button
+              className="bg-yellow-500 text-black rounded-full w-7 h-7 flex items-center justify-center text-xs mx-2.5 hover:cursor-pointer"
+              onClick={() => setShowDropdown(!showDropdown)}
+            >
+              L
+            </button>
+
+            {showDropdown && (
+              <div className="absolute right-0 mt-2 w-40 bg-white border border-gray-200 rounded shadow-md z-50">
+                <button
+                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                  onClick={() => {
+                    // sign out
+                    window.location.href = "/api/auth/signout";
+                  }}
+                >
+                  Sign Out
+                </button>
+              </div>
+            )}
           </div>
+
         </div>
       </div>
 
@@ -67,7 +113,7 @@ export default function WorkspaceUI() {
       <div className="flex flex-1">
         {/* Left Sidebar */}
         <div
-          className={`border-r border-gray-200 flex flex-col transition-all duration-100 ${
+          className={`border-r border-gray-200 flex flex-col transition-all duration-50 ${
             isSidebarOpen ? "w-[15.5vw]" : "w-12"
           }`}
         >
@@ -79,7 +125,7 @@ export default function WorkspaceUI() {
                     className="flex items-center font-bold text-sm"
                     onClick={() => setIsHomeOpen(!isHomeOpen)}
                   >
-                    <h2>Home</h2>
+                    <h2 className="font-medium">Home</h2>
                     <ChevronDown
                       size={14}
                       className={`ml-1 transition-transform ${isHomeOpen ? "rotate-0" : "rotate-180"}`}
@@ -87,8 +133,14 @@ export default function WorkspaceUI() {
                   </button>
                 </div>
                 {isHomeOpen && (
-                  <div className="text-xs text-gray-600 mb-4 px-4">
-                    Your starred bases, interfaces, and workspaces will appear here
+                  <div
+                    className={`overflow-hidden transition-all duration-50 ease-in-out px-4 mb-4
+                      ${isSidebarOpen ? "max-w-full opacity-100" : "max-w-0 opacity-0"}
+                    `}
+                  >
+                    <p className="text-xs text-gray-60 max-h-8">
+                      Your starred bases, interfaces, and workspaces will appear here
+                    </p>
                   </div>
                 )}
 
@@ -97,7 +149,7 @@ export default function WorkspaceUI() {
                     className="flex items-center font-bold text-sm"
                     onClick={() => setIsWorkspacesOpen(!isWorkspacesOpen)}
                   >
-                    <h2>All workspaces</h2>
+                    <h2 className="font-medium">All workspaces</h2>
                     <div className="flex ml-1">
                       <Plus size={14} className="mr-1" />
                       <ChevronDown
@@ -132,7 +184,11 @@ export default function WorkspaceUI() {
                   <span className="text-xs font-medium">Import</span>
                 </div>
                 <div className="p-4 flex items-center">
-                  <button className="bg-[rgb(22,110,225)] text-white px-4 py-1.5 rounded text-xs font-medium w-full text-left flex items-center justify-center">
+                  <button
+                    onClick={() => createBase.mutate({ title: "Untitled Base" })}
+                    className="hover:cursor-pointer bg-[rgb(22,110,225)] text-white px-4 py-[8.8px] mb-1.5 rounded text-xs font-medium w-full text-left flex items-center justify-center
+                              transition-transform duration-150 ease-in-out
+                              hover:scale-105 active:scale-95 hover:brightness-110 active:brightness-90">
                     <Plus size={14} className="mr-2" />
                     Create
                   </button>
@@ -152,111 +208,101 @@ export default function WorkspaceUI() {
         </div>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col">
-          {/* Workspace Header */}
-          <div className="p-4 flex items-center justify-between">
-            <div className="flex items-center">
-              <h1 className="text-xl font-bold mr-2 text-[1.6rem]">Workspace</h1>
-              <div className="bg-gray-200 py-0.5 px-2 flex">
-                <div className="flex items-center text-[11px] font-medium text-gray-600 mr-2">
-                  FREE PLAN
-                </div>
-                <p className="text-[10px] pr-2.5">&#8226;</p>
-                <button className="text-[11px] font-medium text-blue-400 hover:underline">
-                  UPGRADE
-                </button>
-              </div>
-              <button className="ml-2" onClick={() => setStarred(!starred)}>
-                {starred ? (
-                  <Star size={16} className="text-gray-400" fill="white" />
-                ) : (
-                  <StarOff size={16} className="text-gray-400" />
-                )}
-              </button>
-            </div>
-            {/* Right hand side*/}
-            <div className="">
-              {/* Create & Share & ... */}
+        <div className="flex-1 flex">
+          {/* Middle section */}
+          <div className="flex-1 ml-8 mt-3 m">
+            {/* Workspace Header */}
+            <div className="p-4 flex flex-around items-center justify-between">
               <div className="flex items-center">
-                <button className="bg-[rgb(22,110,225)] text-white px-3 py-1.5 rounded text-xs font-medium hover:bg-blue-700">
-                  Create
-                </button>
-                <button className="ml-2 border border-gray-300 px-3 py-1.5 rounded text-xs font-medium hover:bg-gray-100">
-                  Share
-                </button>
-                <button className="ml-2 border border-gray-300 p-1.5 rounded hover:bg-gray-100">
-                  <MoreHorizontal size={14} />
-                </button>
-              </div>
-              {/* Collaborators */}
-              <div className="px-4 pb-4">
-                <h2 className="font-bold text-sm">Collaborators</h2>
-                <div className="flex items-center">
-                  <div className="bg-yellow-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">
-                    L
+                <h1 className="text-xl font-bold mr-2 text-[1.6rem]">Workspace</h1>
+                <div className="bg-gray-200 py-0.5 px-2 flex rounded-md">
+                  <div className="flex items-center text-[11px] font-medium text-gray-600 mr-2">
+                    FREE PLAN
                   </div>
-                  <span className="ml-2 text-xs font-medium">You (owner)</span>
+                  <p className="text-[10px] pr-2.5">&#8226;</p>
+                  <button className="text-[11px] font-medium text-blue-400 hover:underline">
+                    UPGRADE
+                  </button>
                 </div>
+                <button className="ml-2" onClick={() => setStarred(!starred)}>
+                  {starred ? (
+                    <Star size={16} className="text-gray-400" fill="white" />
+                  ) : (
+                    <StarOff size={16} className="text-gray-400" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Filter Controls */}
+            <div className="px-4 pb-4 flex items-center justify-between">
+              <div className="flex items-center">
+                <button className="flex items-center mr-4 text-s font-medium text-gray-600">
+                  Opened by you <ChevronDown size={14} className="ml-1" />
+                </button>
+                <button className="flex items-center text-s font-medium text-gray-600">
+                  Show all types <ChevronDown size={14} className="ml-1" />
+                </button>
+              </div>
+              <div className="flex">
+                <button
+                  className={`p-1.5 rounded ${viewMode === "list" ? "bg-gray-100" : ""}`}
+                  onClick={() => setViewMode("list")}
+                >
+                  <Menu size={14} />
+                </button>
+                <button
+                  className={`p-1.5 rounded ${viewMode === "grid" ? "bg-gray-100" : ""}`}
+                  onClick={() => setViewMode("grid")}
+                >
+                  <Grid size={14} />
+                </button>
+              </div>
+            </div> {/* Filter Controls */}
+
+            {/* Base list */}
+            <div className="px-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {(bases ?? baseList).map((b, index) => {
+                const title = typeof b === "object" && "title" in b ? b.title : b[0];
+                const lastAccessed = typeof b === "object" && "lastAccessed" in b ? new Date(b.lastAccessed).toLocaleString() : "";
+
+                return (
+                  <WorkspaceBase
+                    key={typeof b === "object" && "id" in b ? b.id : index}
+                    title={title}
+                    lastOpened={lastAccessed}
+                  />
+                );
+              })}
+            </div> {/* Baselist*/}
+          </div> {/* Middle Section */}
+
+          {/* Right hand side*/}
+          <div className="w-[300px] p-4.5">
+            {/* Create & Share & ... */}
+            <div className="flex items-center ml-2 mt-3">
+              <button className="bg-[rgb(22,110,225)] text-white px-3.5 py-2 rounded text-xs font-medium hover:bg-blue-700">
+                Create
+              </button>
+              <button className="ml-2 border border-gray-300 px-3.5 py-2 rounded text-xs font-medium hover:bg-gray-100">
+                Share
+              </button>
+              <button className="ml-2 border border-gray-300 p-2 px-3 rounded hover:bg-gray-100">
+                <MoreHorizontal size={14} />
+              </button>
+            </div>
+            {/* Collaborators */}
+            <div className="p-2 pt-3 pb-4 mt-3">
+              <h2 className="mt-1 font-medium text-m">Collaborators</h2>
+              <div className="pt-3 flex items-center">
+                <div className="bg-yellow-500 text-black rounded-full w-6 h-6 flex items-center justify-center text-xs">
+                  L
+                </div>
+                <span className="ml-2 text-xs font-medium">You (owner)</span>
               </div>
             </div>
           </div>
 
-          {/* Filter Controls */}
-          <div className="px-4 pb-4 flex items-center justify-between">
-            <div className="flex items-center">
-              <button className="flex items-center mr-4 text-s font-medium text-gray-600">
-                Opened by you <ChevronDown size={14} className="ml-1" />
-              </button>
-              <button className="flex items-center text-s font-medium text-gray-600">
-                Show all types <ChevronDown size={14} className="ml-1" />
-              </button>
-            </div>
-            <div className="flex">
-              <button
-                className={`p-1.5 rounded ${viewMode === "list" ? "bg-gray-100" : ""}`}
-                onClick={() => setViewMode("list")}
-              >
-                <Menu size={14} />
-              </button>
-              <button
-                className={`p-1.5 rounded ${viewMode === "grid" ? "bg-gray-100" : ""}`}
-                onClick={() => setViewMode("grid")}
-              >
-                <Grid size={14} />
-              </button>
-            </div>
-          </div>
-
-          {/* Workspace Items */}
-          <div className="px-4 grid grid-cols-2 gap-4">
-            <div className="border border-gray-200 rounded p-3 flex items-center hover:bg-gray-50">
-              <div className="bg-blue-500 text-white w-12 h-12 rounded flex items-center justify-center mr-3">
-                <span className="font-medium text-lg">Un</span>
-              </div>
-              <div>
-                <h3 className="font-medium text-sm">Untitled Base</h3>
-                <p className="text-xs text-gray-500">Base opened 12 minutes ago</p>
-              </div>
-            </div>
-            <div className="border border-gray-200 rounded p-3 flex items-center hover:bg-gray-50">
-              <div className="bg-green-600 text-white w-12 h-12 rounded flex items-center justify-center mr-3">
-                <span className="font-medium text-lg">Un</span>
-              </div>
-              <div>
-                <h3 className="font-medium text-sm">Untitled Base</h3>
-                <p className="text-xs text-gray-500">Base opened 12 minutes ago</p>
-              </div>
-            </div>
-            <div className="border border-gray-200 rounded p-3 flex items-center hover:bg-gray-50">
-              <div className="bg-green-600 text-white w-12 h-12 rounded flex items-center justify-center mr-3">
-                <span className="font-medium text-lg">Ew</span>
-              </div>
-              <div>
-                <h3 className="font-medium text-sm">ewer</h3>
-                <p className="text-xs text-gray-500">Base opened 3 hours ago</p>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>
