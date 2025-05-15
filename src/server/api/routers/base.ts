@@ -28,7 +28,7 @@ export const baseRouter = createTRPCRouter({
 
   // UPDATE last accessed
   touch: protectedProcedure
-    .input(z.object({ id: z.number() }))
+    .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       return await ctx.db.base.update({
         where: { id: input.id },

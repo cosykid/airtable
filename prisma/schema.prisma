@@ -14,18 +14,6 @@ datasource db {
     url      = env("DATABASE_URL")
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
-
-    createdBy   User   @relation(fields: [createdById], references: [id])
-    createdById String
-
-    @@index([name])
-}
-
 // Necessary for Next auth
 model Account {
     id                       String  @id @default(cuid())
@@ -62,7 +50,6 @@ model User {
     image         String?
     accounts      Account[]
     sessions      Session[]
-    posts         Post[]
     bases         Base[] // User has many Bases
 }
 
@@ -75,7 +62,7 @@ model VerificationToken {
 }
 
 model Base {
-  id           Int      @id @default(autoincrement())
+  id           String   @id @default(uuid())
   title        String
   lastAccessed DateTime @default(now())
 
@@ -83,7 +70,30 @@ model Base {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId String
 
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  tables       Table[]
 }
 
+model Table {
+  id        String   @id @default(cuid())
+  base      Base     @relation(fields: [baseId], references: [id])
+  baseId    String
+  name      String
+  fields    Field[]
+  records   Record[]
+}
+
+model Field {
+  id        String   @id @default(cuid())
+  table     Table    @relation(fields: [tableId], references: [id])
+  tableId   String
+  name      String
+  type      String
+  isText Boolean
+}
+
+model Record {
+  id        String   @id @default(cuid())
+  tableId   String
+  table     Table    @relation(fields: [tableId], references: [id])
+  data      Json     @db.JsonB
+}

@@ -1,6 +1,6 @@
 import { auth } from "~/server/auth";
 import { redirect } from "next/navigation";
-import WorkspaceUI from "~/app/_components/workspaceUI";
+import WorkspaceUI from "~/app/_workspaceComponents/workspaceUI";
 import { createCaller } from "~/server/api/root";
 import { db } from "~/server/db";
 import { headers as nextHeaders } from "next/headers";
@@ -27,6 +27,7 @@ export default async function WorkspacePage() {
   return (
     <WorkspaceUI
       baseList={bases.map((b: Base) => [
+        b.id,
         b.title,
         new Date(b.lastAccessed).toLocaleString(),
       ])}
