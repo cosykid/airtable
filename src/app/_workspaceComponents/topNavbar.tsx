@@ -3,7 +3,14 @@
 import Image from "next/image";
 import { Search } from "lucide-react";
 
-export default function TopNavbar({ setIsSidebarOpen, isSidebarOpen, setShowDropdown, showDropdown }: any) {
+type TopNavbarProps = {
+  isSidebarOpen: boolean;
+  setIsSidebarOpen: (open: boolean) => void;
+  showDropdown: boolean;
+  setShowDropdown: (open: boolean) => void;
+};
+
+export default function TopNavbar({ setIsSidebarOpen, isSidebarOpen, setShowDropdown, showDropdown }: TopNavbarProps) {
   return (
     <div className="flex items-center p-1.5 border-b border-gray-200 bg-white w-full">
       <div className="flex items-center mr-4">

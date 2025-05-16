@@ -29,7 +29,7 @@ export default function WorkspaceUI({
   const utils = api.useUtils();
   const createBase = api.base.create.useMutation({
     onSuccess: (newBase) => {
-      utils.base.getAll.setData(undefined, (prev: any) =>
+      utils.base.getAll.setData(undefined, (prev) =>
         prev ? [newBase, ...prev] : [newBase]
       );
       router.push(`/${newBase.id}`);

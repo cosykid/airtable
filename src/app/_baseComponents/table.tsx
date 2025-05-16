@@ -9,6 +9,13 @@ import {
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useRef } from "react";
 
+type RowData = {
+  id: string;
+  f1: string;
+  f2: number;
+  f3: string;
+};
+
 // 🧪 Example schema — replace with your real fields/data
 const fields = [
   { id: "f1", name: "Name", type: "text" },
@@ -16,15 +23,15 @@ const fields = [
   { id: "f3", name: "Role", type: "text" },
 ];
 
-function generateFakeData(rowCount: number): any[] {
+function generateFakeData(rowCount: number):  RowData[] {
   const names = ["Langkee", "Kiki", "Momo", "Alice", "Bob", "Charlie", "Eve"];
   const roles = ["Engineer", "Designer", "Manager", "Analyst", "Intern"];
 
   const rows = Array.from({ length: rowCount }, (_, i) => ({
     id: `${i + 1}`,
-    f1: names[i % names.length],
+    f1: names[i % names.length] ?? "",
     f2: 20 + (i % 10), // age 20–29
-    f3: roles[i % roles.length],
+    f3: roles[i % roles.length] ?? "",
   }));
 
   return rows;
@@ -33,7 +40,7 @@ function generateFakeData(rowCount: number): any[] {
 const data = generateFakeData(10000); // or 10_000
 
 export default function AirtableGrid() {
-  const columnHelper = createColumnHelper<any>();
+  const columnHelper = createColumnHelper<RowData>();
 
   const columns = [
     columnHelper.accessor("id", {
@@ -42,7 +49,7 @@ export default function AirtableGrid() {
       size: 80,
     }),
     ...fields.map((field) =>
-      columnHelper.accessor(field.id, {
+      columnHelper.accessor(field.id as keyof RowData, {
         header: field.name,
         size: 200,
         cell: (info) => (
@@ -63,7 +70,7 @@ export default function AirtableGrid() {
     ),
   ];
 
-  const table = useReactTable({
+  const table = useReactTable<RowData>({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),

@@ -2,6 +2,17 @@
 
 import { Book, ChevronDown, Home, Plus, ShoppingCart, Upload, Users } from "lucide-react";
 
+type SidebarProps = {
+  isSidebarOpen: boolean;
+  isHomeOpen: boolean;
+  setIsHomeOpen: (open: boolean) => void;
+  isWorkspacesOpen: boolean;
+  setIsWorkspacesOpen: (open: boolean) => void;
+  createBase: {
+    mutate: (data: { title: string }) => void;
+  };
+};
+
 export default function Sidebar({
   isSidebarOpen,
   isHomeOpen,
@@ -9,7 +20,7 @@ export default function Sidebar({
   isWorkspacesOpen,
   setIsWorkspacesOpen,
   createBase,
-}: any) {
+}: SidebarProps) {
   return (
     <div
       className={`border-r border-gray-200 flex flex-col transition-all duration-50 ${
