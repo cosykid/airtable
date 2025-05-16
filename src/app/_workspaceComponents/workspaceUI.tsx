@@ -12,7 +12,7 @@ import RightPanel from "~/app/_workspaceComponents/rightPanel";
 export default function WorkspaceUI({
   baseList,
 }: {
-  baseList: [number, string, string][];
+  baseList: [string, string, string][];
 }) {
   const [isHomeOpen, setIsHomeOpen] = useState(true);
   const [isWorkspacesOpen, setIsWorkspacesOpen] = useState(true);

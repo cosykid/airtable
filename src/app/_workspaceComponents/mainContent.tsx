@@ -4,7 +4,7 @@ import { useState } from "react";
 import { ChevronDown, Menu, Grid, Star, StarOff } from "lucide-react";
 import WorkspaceBase from "~/app/_workspaceComponents/workspaceBase";
 
-export default function MainContent({ baseList }: { baseList: [number, string, string][] }) {
+export default function MainContent({ baseList }: { baseList: [string, string, string][] }) {
   const [viewMode, setViewMode] = useState("grid");
   const [starred, setStarred] = useState(true);
 
